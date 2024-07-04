@@ -1,4 +1,3 @@
-import os
 from flask import Flask, render_template, jsonify, request
 import random
 
@@ -25,48 +24,12 @@ def check_win(board, player):
 def check_tie(board):
     return all([spot != ' ' for row in board for spot in row])
 
-# Minimax algorithm with alpha-beta pruning
-def minimax(board, depth, maximizing_player):
-    # Terminal conditions: check for wins, ties, or depth limit
-    result = check_game_state(board)
-    if result is not None:
-        return result
-
-    if maximizing_player:
-        max_eval = float('-inf')
-        best_move = None
-
-        # Loop through all possible moves
-        for i in range(3):
-            for j in range(3):
-                if board[i][j] == ' ':
-                    board[i][j] = 'O'  # Assume AI is 'O'
-                    eval = minimax(board, depth + 1, False)
-                    board[i][j] = ' '  # Undo move
-
-                    if eval > max_eval:
-                        max_eval = eval
-                        best_move = (i, j)
-        return max_eval if depth != 0 else best_move
-
-    else:
-        min_eval = float('inf')
-
-        # Loop through all possible moves
-        for i in range(3):
-            for j in range(3):
-                if board[i][j] == ' ':
-                    board[i][j] = 'X'  # Assume human player is 'X'
-                    eval = minimax(board, depth + 1, True)
-                    board[i][j] = ' '  # Undo move
-
-                    if eval < min_eval:
-                        min_eval = eval
-        return min_eval
-
+# Make AI move
 def ai_move(board):
-    best_move = minimax(board, 0, True)
-    return best_move
+    empty_cells = [(i, j) for i in range(3) for j in range(3) if board[i][j] == ' ']
+    if empty_cells:
+        return random.choice(empty_cells)
+    return None
 
 @app.route('/')
 def index():
@@ -77,6 +40,7 @@ def move():
     global current_player
     data = request.json
     row, col = data['row'], data['col']
+    is_against_ai = data['isAgainstAI']
     
     if board[row][col] == ' ':
         board[row][col] = current_player
@@ -96,7 +60,8 @@ def move():
 @app.route('/ai-move', methods=['POST'])
 def ai_move_route():
     global current_player
-    row, col = ai_move(board)
+    data = request.json
+    row, col = ai_move(data['board'])
     
     if row is not None and col is not None:
         board[row][col] = current_player
@@ -106,7 +71,7 @@ def ai_move_route():
         elif check_tie(board):
             response = {'status': 'tie', 'row': row, 'col': col}
         else:
-            current_player = 'X' if current_player == 'O' else 'O'
+            current_player = 'O' if current_player == 'X' else 'X'
             response = {'status': 'continue', 'player': current_player, 'row': row, 'col': col, 'board': board}
     else:
         response = {'status': 'tie'}
@@ -121,5 +86,4 @@ def reset():
     return jsonify({'status': 'reset'})
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
