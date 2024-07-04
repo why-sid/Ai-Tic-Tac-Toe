@@ -7,7 +7,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="board">
+    <div class="menu">
+        <button id="play-human">Play Against Human</button>
+        <button id="play-ai">Play Against AI</button>
+    </div>
+    <div class="board" style="display: none;">
         {% for row in range(3) %}
             {% for col in range(3) %}
                 <div class="cell" data-row="{{ row }}" data-col="{{ col }}"></div>
@@ -15,7 +19,7 @@
         {% endfor %}
     </div>
     <div id="message"></div>
-    <button id="reset">Reset Game</button>
+    <button id="reset" style="display: none;">Reset Game</button>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
